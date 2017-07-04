@@ -23,7 +23,6 @@ define(function (require, exports, module) {
     require('core/interfaces/_internals/columns/component'),
     require('core/interfaces/_internals/directus_users/component'),
     require('core/interfaces/_internals/file_preview/component'),
-    require('core/interfaces/_internals/file_title/component'),
     require('core/interfaces/_internals/file_size/component'),
     require('core/interfaces/_internals/permissions/component'),
     require('core/interfaces/_internals/messages_recipients/component'),
@@ -44,7 +43,8 @@ define(function (require, exports, module) {
     require('core/interfaces/_system/accountability/date_created'),
     require('core/interfaces/_system/accountability/date_modified'),
     require('core/interfaces/_system/accountability/user_created'),
-    require('core/interfaces/_system/accountability/user_modified')
+    require('core/interfaces/_system/accountability/user_modified'),
+    require('core/interfaces/user/component')
   ].map(interfaceGroup('system'));
 
   var StringInterfaces = [
@@ -92,9 +92,7 @@ define(function (require, exports, module) {
   ].map(interfaceGroup('relational'));
 
   var MiscInterfaces = [
-    require('core/interfaces/section_break/component'),
-    require('core/interfaces/user/interface'),
-    require('core/interfaces/user')
+    require('core/interfaces/section_break/component')
   ].map(interfaceGroup('misc'));
 
   // Directus Core Interfaces

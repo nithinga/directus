@@ -95,7 +95,9 @@ define(function(require, exports, module) {
         }
 
         var value = attributes[columnName];
-        var nullDisallowed = column.get('nullable') !== true;
+        var allowNull = column.isNullable();
+        var required = column.isRequired();
+        var defaultValue = column.get('default_value');
         var forceUIValidation = UIManager.shouldForceUIValidation(column.get('ui'));
         var isNull = Utils.isNothing(value);
         var uiSettings = UIManager.getSettings(column.get('ui'));
@@ -112,16 +114,16 @@ define(function(require, exports, module) {
           return;
         }
 
-        if (isNull && !nullDisallowed) {
+        if (isNull && allowNull && !required) {
           return;
         }
 
         // NOTE: Column with default value should not be required
-        if (column.get('default_value') !== undefined) {
+        if (!required && defaultValue !== undefined) {
           return;
         }
 
-        var mess = (!forceUIValidation && !skipSerializationIfNull && nullDisallowed && isNull) ?
+        var mess = (!forceUIValidation && !skipSerializationIfNull && !allowNull && isNull) ?
           'The field cannot be empty'
           : UIManager.validate(this, columnName, value);
 
@@ -616,6 +618,29 @@ define(function(require, exports, module) {
       return changes;
     },
 
+    getChanges: function () {
+      var data = null;
+
+      this.trigger('save:before');
+
+      if (this.isNew()) {
+        return data;
+      }
+
+      data = this.unsavedChanges() || {};
+
+      this.structure.each(function (column) {
+        var attr = column.id;
+        var options = column.options;
+
+        if (options && options.get('allow_null') === true && data[attr] === '') {
+          data[attr] = null;
+        }
+      }, this);
+
+      return data;
+    },
+
     startTracking: function () {
       this._startTracking();
 
@@ -679,6 +704,11 @@ define(function(require, exports, module) {
       // NOTE: Track changes even when the silent flag has been set
       if (this._trackingChanges) {
         for (key in attrs) {
+          // NOTE: this was added to avoid tracking files non-structure column attributes
+          if (_.isFunction(this.shouldBeTracked) && !this.shouldBeTracked(key)) {
+            continue;
+          }
+
           val = attrs[key];
           // NOTE: This code was inserted by us to support relational attributes
           // not part of TrackIt library original code

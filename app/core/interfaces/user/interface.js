@@ -1,46 +1,37 @@
-define(['app', 'core/UIComponent', 'core/UIView'], function (app, UIComponent, UIView) {
+define([
+  'app',
+  'core/UIView'
+], function (app, UIView) {
+
   'use strict';
 
-  var Input = UIView.extend({
+  return UIView.extend({
     template: 'user/interface',
 
+    beforeSaving: function () {
+      return this.userId;
+    },
+
     serialize: function () {
-      var user = app.users.get(this.options.value);
-      var name = user.get('first_name') + ' ' + user.get('last_name');
+      var value = this.userId;
+      var user = app.users.get(value);
 
       return {
-        name: name,
-        user: user,
-        avatarUrl: user.getAvatar()
+        name: this.name,
+        user: user.toJSON(),
+        avatarUrl: user.getAvatar(),
+        value: value
       };
-    }
-  });
+    },
 
-  var Component = UIComponent.extend({
-    id: 'directus_user',
-    system: true,
-    sortBy: ['first_name', 'last_name'],
-    Input: Input,
-    list: function (options) {
-      var html;
-      var userId = options.value || options.model.id;
+    initialize: function (options) {
+      var userId = options.value;
 
-      switch (options.settings.get('format')) {
-        case 'full':
-          html = '{{userFull user}}';
-          break;
-        default:
-          html = '{{userShort user}}';
-          break;
+      if (userId === undefined) {
+        userId = app.users.getCurrentUser().id;
       }
 
-      html = '<div class="interface-user">' + html + '</div>';
-
-      return this.compileView(html, {
-        user: userId
-      });
+      this.userId = userId;
     }
   });
-
-  return Component;
 });
